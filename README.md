@@ -1,36 +1,33 @@
-Project Creation Script
-This script automates the creation of a new .NET solution and multiple microservices within that solution. The script prompts the user for the solution name and path to create the solution directory. Then it prompts for the number of microservices to be created within the solution.
+Microservice Solution Creator
+This script is designed to create a new .NET solution with multiple microservices. It prompts the user to enter a solution name and application path, and then creates the solution directory and file using the .NET CLI. The user is then prompted to enter the number of microservices to create, and for each microservice, the script creates a directory structure and adds projects to the solution.
 
-For each microservice, the script creates the following directories:
+Usage
+Open PowerShell
+Navigate to the directory where the script is saved
+Run the script using the command .\Add-Update-microservices.ps1
+Follow the prompts to enter the solution name and application path
+Enter the number of microservices to create
+Follow the prompts to enter the name of each microservice
+Script Details
+Add-Project Function
+This function is called for each microservice and performs the following tasks:
 
-Domain
-Application
-Infrastructure
-Api
-Tests
+Prompts the user to enter a name for the microservice
+  Constructs the path to the microservice directory
+  Checks if the microservice directory already exists
+  Defines an array of directories to create
+  Creates the directories using the New-Item cmdlet
+  Creates the microservice projects using the .NET CLI
+  Adds the microservice projects to the solution using the .NET CLI
+  Adds project references to the microservice projects using the .NET CLI
+  Adds project references to the test project using the .NET CLI
+  Writes a success message to the console
+  New-Service Function
+  This function is called to prompt the user to enter the number of microservices to create, and then calls the Add-Project function for each microservice.
 
-Additionally, the script creates the following projects within each microservice:
-
-Class Library for the Domain layer
-Class Library for the Application layer
-Class Library for the Infrastructure layer
-Web API for the Api layer
-XUnit for the Tests layer
-
-Finally, the script adds the created projects to the solution and sets the project references.
+Solution Creation
+The script prompts the user to enter a solution name and application path, and then checks if the solution already exists. If the solution exists, the user is prompted to enter the number of microservices
 
 Requirements
 PowerShell version 5.1 or later
 .NET Core SDK version 3.1 or later
-
-Usage
-Open PowerShell
-Navigate to the directory where you want to create the new .NET solution
-
-Execute the script using the following command:
-
-Copy code
-.\Add-Update-microservices.ps1
-Follow the prompts to enter the solution name and path, as well as the number of microservices to be created.
-
-Note: This script assumes that you are using the recommended .NET solution and project structure for microservices architecture. If you have a different structure or want to modify the script to fit your needs, you will need to make changes to the script accordingly.
