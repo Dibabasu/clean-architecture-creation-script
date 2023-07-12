@@ -1,6 +1,36 @@
+function Test-Input {
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$input
+    )
+    if ($input -match "^[^a-zA-Z]|[^a-zA-Z0-9._-]") {
+        Write-Host "Invalid input. Please start with a letter and use only alphanumeric characters, dots, dashes, or underscores."
+        return $false
+    }
+    return $true
+}
+
+function Add-ProjectReference {
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$project,
+        [Parameter(Mandatory=$true)]
+        [string[]]$references
+    )
+    foreach ($reference in $references) {
+        try {
+            dotnet add $project reference $reference
+        } catch {
+            Write-Host "Failed to add reference to $project. Error: $_"
+        }
+    }
+}
 function Add-Project {
+    $i =[string]::Empty
     # Prompts the user to enter a name for the microservice
-    $microserviceName = Read-Host "Enter microservice $i name"
+    do {
+        $microserviceName = Read-Host "Enter microservice $i name"
+    } until (Test-Input $microserviceName)
     # Constructs the path to the microservice directory
     $microservicePath = Join-Path -Path $solutionPath -ChildPath "src\$microserviceName"
      
@@ -37,15 +67,12 @@ function Add-Project {
 	
 	
     #Adding Project Reference to Projects
-    dotnet add "$microservicePath/$microserviceName.Application/$microserviceName.Application.csproj" reference "$microservicePath/$microserviceName.Domain/$microserviceName.Domain.csproj"
-    dotnet add "$microservicePath/$microserviceName.Infrastructure/$microserviceName.Infrastructure.csproj" reference "$microservicePath/$microserviceName.Application/$microserviceName.Application.csproj"
-    dotnet add "$microservicePath/$microserviceName.Api/$microserviceName.Api.csproj" reference "$microservicePath/$microserviceName.Application/$microserviceName.Application.csproj"
-    
+    Add-ProjectReference "$microservicePath/$microserviceName.Application/$microserviceName.Application.csproj" @("$microservicePath/$microserviceName.Domain/$microserviceName.Domain.csproj")
+    Add-ProjectReference "$microservicePath/$microserviceName.Infrastructure/$microserviceName.Infrastructure.csproj" @("$microservicePath/$microserviceName.Application/$microserviceName.Application.csproj")
+    Add-ProjectReference "$microservicePath/$microserviceName.Api/$microserviceName.Api.csproj" @("$microservicePath/$microserviceName.Application/$microserviceName.Application.csproj")
+
     #Adding Project Reference to Test Project
-    dotnet add "$solutionPath/tests/$microserviceName.Tests/$microserviceName.Tests.csproj" reference "$microservicePath/$microserviceName.Domain/$microserviceName.Domain.csproj"
-    dotnet add "$solutionPath/tests/$microserviceName.Tests/$microserviceName.Tests.csproj" reference "$microservicePath/$microserviceName.Application/$microserviceName.Application.csproj"
-    dotnet add "$solutionPath/tests/$microserviceName.Tests/$microserviceName.Tests.csproj" reference "$microservicePath/$microserviceName.Api/$microserviceName.Api.csproj"
-    dotnet add "$solutionPath/tests/$microserviceName.Tests/$microserviceName.Tests.csproj" reference "$microservicePath/$microserviceName.Infrastructure/$microserviceName.Infrastructure.csproj"
+    Add-ProjectReference "$solutionPath/tests/$microserviceName.Tests/$microserviceName.Tests.csproj" @("$microservicePath/$microserviceName.Domain/$microserviceName.Domain.csproj", "$microservicePath/$microserviceName.Application/$microserviceName.Application.csproj", "$microservicePath/$microserviceName.Api/$microserviceName.Api.csproj", "$microservicePath/$microserviceName.Infrastructure/$microserviceName.Infrastructure.csproj")
 
     Write-Host "Microservice '$microserviceName' has been successfully created."
 }
@@ -60,8 +87,10 @@ function New-Service {
 }
 
 
-# Prompt user for solution name and create path
-$solutionName = Read-Host "Enter solution name"
+do {
+    $solutionName = Read-Host "Enter solution name"
+} until (Test-Input $solutionName)
+
 $appPath = Read-Host "Enter Application Path"
 
 $solutionPath = Join-Path -Path $appPath -ChildPath $solutionName
@@ -75,12 +104,16 @@ if (Test-Path "$solutionPath/$solutionName.sln") {
 }
 
 else {
-    # Creates the solution directory
-    New-Item -ItemType Directory -Force -Path $solutionPath
-    # Creates the solution file using the .NET CLI
-    dotnet new sln -n $solutionName -o $solutionPath
-    # Prompts the user to enter the number of microservices to create
-    New-Service
+    try {
+        # Creates the solution directory
+        New-Item -ItemType Directory -Force -Path $solutionPath
+        # Creates the solution file using the .NET CLI
+        dotnet new sln -n $solutionName -o $solutionPath
+        # Prompts the user to enter the number of microservices to create
+        New-Service
+    } catch {
+        Write-Host "An error occurred: $_"
+    }
 }
 
 
